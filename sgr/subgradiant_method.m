@@ -25,7 +25,7 @@ while ( 1 )
     % appartient à F
     % set x <- argmin{L(x,pik):x appartient à F}
     f0= vecteurLagr(m,n,a,c,pik,MM);          %f0 est le vecteur correspondant à la fonction de lagrange
-    [A,b]=contraintesLF( AA, MM, mm_, m, n);    %A et b sont les contraites F (positivité de x et z + y entre 0 et 1)
+    [A,b]=contraintesLF( AA, MM, mm_, m, n);    %A et b sont les contraites F
     [x, theta] = linprog(f0, A, b, [], [], lb, ub);
 	for i=m*n+1:2*m*n %Permet de discretiser le vecteur y
         if(x(i)~=0)
