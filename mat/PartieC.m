@@ -132,7 +132,7 @@ while ( 1 )
       
       %end if 
    end 
-   if( k > iterLimit)
+   if(abs( object(x) - theta )/theta <= eps || k > iterLimit)
        if(k > iterLimit)
            fprintf("limite atteinte\n");
        else
