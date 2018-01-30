@@ -40,7 +40,7 @@ lb = zeros(2*m*n+m*n*n,1);
 
 eps=10e-5;
 rho=1;
-pi0=ones(m*n,1);
+pi0=ones(m*n,1)*2;
 iterLimit=1000;
 DualNoChangTOL=100;
 x=subgradient_method(eps,rho, pi0, iterLimit,DualNoChangTOL,object,ub,lb,a,c,AA, MM, mm_,m,n);
@@ -108,24 +108,23 @@ while ( 1 )
        
    % else thetachapeau= applyMHeuristic (x^k,f,X?F)
    else 
-      [A,b]=contraintesL(AA, MM, mm_, m, n);
-      f2=objectivevec(m,n,a,c);
-      [x1, theta_c] = linprog(f2,A,b,[],[],lb,ub); 
-%       f=@(x) objective(x,m,n,a,c);
-%       [x1, theta_c] = patternsearch(f,x,A,b,[],[],lb,ub);
+%       [A,b]=contraintesL(AA, MM, mm_, m, n);
+%       f2=objectivevec(m,n,a,c);
+%       [x1, theta_c] = linprog(f2,A,b,[],[],lb,ub); 
+      f2=@(x) objective(x,m,n,a,c);
+      [x1, theta_c] = patternsearch(f2,x,A,b,[],[],lb,ub);
       for i=m*n+1:2*m*n
           if(x1(i)~=0)
               x1(i)=1;
           end
       end
-      theta_c=f2'*x1
+      theta_c=f2(x1)
       
       %for all j appartient J do ... end for 
       
       for j=1:J
         pik(j) = max(0,pik(j)-(rho*(theta-theta_c)/norm(gamma))*gamma(j));  
       end 
-      
       %Set k = k + 1
       
       k= k+1;
@@ -141,6 +140,14 @@ while ( 1 )
        break;
    end
 end
+fid=fopen('dataC.txt','w');
+   fprintf(fid,'matrice X trouvé avec ga \n');
+   fprintf(fid,'%d ',x);
+   fprintf(fid, '\n multiplicateur de Lagrange : \n');
+   fprintf(fid, '%d\n\n', pik);
+   fprintf(fid, '\n valeure optimale : \n');
+   fprintf(fid, '%d\n\n', object(x));
+fclose(fid);
 end 
 
 
