@@ -1,0 +1,19 @@
+param n =  2;
+param m =   1;
+param MM:=
+		1	112;
+		
+
+param AA:=
+		1	6
+		2	8;
+
+param a:
+	1	2 =
+1	251	144;
+param c:
+	1	2 =
+	1	1	1;
+
+param mm_:1		2 =
+	1	  0		0 ;

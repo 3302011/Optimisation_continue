@@ -1,0 +1,38 @@
+#RESET AMPL ENVIRONEMENT
+reset;
+
+# LOAD THE MODEL
+model modelM.mod;
+
+#LOAD THE DATA
+data modelM1.dat;
+
+# dipsplay the probleme formulation
+expand z, ConstraintA,ConstraintMY,ConstraintMY2,Constraint4,Constraint5;
+
+
+
+# choose the solver
+option solver knitro;
+
+# solve
+solve;
+print "#############solver KNITRO############################";
+# display the result
+display X,z,y;
+display _solve_time;
+
+print "#############fin solver KNITRO########################";
+
+# choose the solver
+option solver baron;
+
+# solve
+solve;
+print "#############solver BARON############################";
+
+# display the result
+display X,z;
+display _solve_time;
+
+print "#############fin solver BARON############################";
