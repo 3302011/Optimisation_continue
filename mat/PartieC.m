@@ -1,5 +1,6 @@
-function PartieC2()
+function PartieC()
 
+%On a un jeu de donnée de petite taille
 
 n=  8;
 m=   4;
@@ -29,22 +30,23 @@ mm_=[
 object= @(x) objective(x,m,n,a,c); %a et c donnés par les scripts 
 
 % Les contraintes
-[A,b]=contraintesLproblemsans56(AA, MM, mm_, m, n);
+[A,b]=contraintesL(AA, MM, mm_, m, n);
 
 %Les variables 
 ub = ones(2*m*n+m*n*n,1);
-ub(1:m*n)=Inf; %en suivant les instructions sur la page info de ga
+ub(1:m*n)=Inf;
 ub(2*m*n+1:end)=Inf;
 lb = zeros(2*m*n+m*n*n,1);
+
 eps=10e-5;
-tau=1;
-pi0=ones(m*n,1)*5;
-iterlimit=1000;
+rho=1;
+pi0=ones(m*n,1);
+iterLimit=1000;
 DualNoChangTOL=100;
-x=subgradient_method(eps,tau, pi0, iterlimit,DualNoChangTOL,object,ub,lb,a,c,AA, MM, mm_,m,n);
+x=subgradient_method(eps,rho, pi0, iterLimit,DualNoChangTOL,object,ub,lb,a,c,AA, MM, mm_,m,n);
 end
 
-function x=subgradient_method(eps,tau, pi0, iterlimit,DualNoChangTOL,object,ub,lb,a,c, AA, MM, mm_,m,n)
+function x=subgradient_method(eps,rho, pi0, iterLimit,DualNoChangTOL,object,ub,lb,a,c, AA, MM, mm_,m,n)
 
 %eps control parameter
 %tau appartient à ]0, 2[ control parameter
@@ -58,9 +60,9 @@ function x=subgradient_method(eps,tau, pi0, iterlimit,DualNoChangTOL,object,ub,l
 
 k=1; 
 t=1; 
-beta=-1e-30; % infinie
+beta=-inf; % infinie
 pik=pi0; 
-J = length(pi0);
+J = m*n;
 gamma=zeros(J,1);
 
 % critères d'arrêts
@@ -70,19 +72,17 @@ while ( 1 )
     % Solve the Lagrangian relaxation: theta(pi) = min L(x,pi) avec x
     % appartient à F
     % set x <- argmin{L(x,pik):x appartient à F}
-    f0= objectivevec56(m,n,a,c,pik,MM);
-    [A,b]=contraintesL( AA, MM, mm_, m, n);
-   [x, theta] = linprog(f0, A, b, [], [], lb, ub);
-	for i=m*n+1:2*m*n
+    f0= vecteurLagr56(m,n,a,c,pik,MM);          %f0 est le vecteur correspondant à la fonction de lagrange en ne prenant en compte que la contrainte 56
+    [A,b]=contraintesLF( AA, MM, mm_, m, n);    %A et b sont les contraites F (positivité de x et z + y entre 0 et 1)
+    [x, theta] = linprog(f0, A, b, [], [], lb, ub);
+	for i=m*n+1:2*m*n %Permet de discretiser le vecteur y
         if(x(i)~=0)
             x(i)=1;
         end
-	end%donne le minimum de la fonction L
-   %for all j appartient J do: gamma^{k}_{j} = g_{j}(x^{k}) end for 
-   g = gradObjectif(x,m,n,MM);
-   for j=1:J
-        gamma(j)=g(j);
-   end 
+    end
+    
+   %On récupère dans un vecteur toutes les valeurs des contraintes X
+   gamma = vecG(x,m,n,MM);
    
    % if theta(pi^k) > beta^k then set beta^k+1 = theta(pi^k)
    % else 
@@ -95,7 +95,7 @@ while ( 1 )
        if t <= DualNoChangTOL
            t=t+1; 
        else 
-            tau=tau/2; 
+            rho=rho/2; 
             t=1; 
        end 
    end
@@ -105,42 +105,46 @@ while ( 1 )
    if gamma==zeros(J,1)
        fprintf("gamma=0\n");
        break; % on arrête l'algorithme
+       
    % else thetachapeau= applyMHeuristic (x^k,f,X?F)
-   
    else 
-      [A,b]=contraintesLproblemsans56(AA, MM, mm_, m, n);
-      object=objectivevec(m,n,a,c);
-      [x1, theta_c] = linprog(object,A,b,[],[],lb,ub);
+      [A,b]=contraintesL(AA, MM, mm_, m, n);
+      f2=objectivevec(m,n,a,c);
+      [x1, theta_c] = linprog(f2,A,b,[],[],lb,ub); 
+%       f=@(x) objective(x,m,n,a,c);
+%       [x1, theta_c] = patternsearch(f,x,A,b,[],[],lb,ub);
       for i=m*n+1:2*m*n
           if(x1(i)~=0)
               x1(i)=1;
           end
       end
-      theta_c=object'*x1
-      %[x1, theta_c] = ga(f,n+3*m*n+m*n*n,A,b,[],[],lb,ub);
+      theta_c=f2'*x1
       
       %for all j appartient J do ... end for 
       
       for j=1:J
-        pik(j) = max(0,pik(j)-(tau*(theta-theta_c)/norm(gamma))*gamma(j));  
+        pik(j) = max(0,pik(j)-(rho*(theta-theta_c)/norm(gamma))*gamma(j));  
       end 
       
       %Set k = k + 1
       
-      k= k+1
+      k= k+1;
       
       %end if 
    end 
-   if(abs( object'*x - theta )/theta > eps && k <= iterLimit)
-       fprintf("limite atteinte\n");
+   if( k > iterLimit)
+       if(k > iterLimit)
+           fprintf("limite atteinte\n");
+       else
+           fprintf("Valeur optimale\n");
+       end
        break;
    end
 end
-
 end 
 
 
-function g=gradObjectif(X,m,n,MM)
+function g=vecG(X,m,n,MM)
     g=zeros(m*n,1);
     x = zeros(m,n); % x de la fonction objective 
     y = zeros(m,n); % y deinteger_values = m*n+1:1:2*m*n; la fonction objective 
@@ -166,9 +170,9 @@ function g=gradObjectif(X,m,n,MM)
         end
     end
     
-end
+end         %On met sous forme de vecteur les contraintes 56
 
-function object=objective(X,m,n,a,c) % X est celui que l'on cherche 
+function object=objective(X,m,n,a,c) % Fonction objective que l'on souhaite optimiser
 
 x = zeros(m,n); % x de la fonction objective 
 y = zeros(m,n); % y deinteger_values = m*n+1:1:2*m*n; la fonction objective 
@@ -190,31 +194,31 @@ for i=1:m
 end 
 end 
 
-function object=objectivevec56(m,n,a,c,pik,MM)
+function vec= vecteurLagr56(m,n,a,c,pik,MM) %Réprésente le vecteur f de la fonction lagrangienne du problème avec la contrainte 56
 
-object=zeros(2*m*n+m*n*n,1);
+vec=zeros(2*m*n+m*n*n,1);
 
 
 for i=1:m
     for j=1:n
-        object((i-1)*n+j,1)=c(i,j);
+        vec((i-1)*n+j,1)=c(i,j);
     end 
 end 
 for i=1:m
     for j=1:n
-        object(m*n+(i-1)*n+j,1)=a(i,j)-pik((i-1)*n+j)*MM(i);
+        vec(m*n+(i-1)*n+j,1)=a(i,j)-pik((i-1)*n+j)*MM(i);
     end 
 end
 for i=1:m
     for k=1:n
         for j=1:n
-            object(2*m*n+(i-1)*n*n+(k-1)*n+j,1)=pik((i-1)*n+j);
+            vec(2*m*n+(i-1)*n*n+(k-1)*n+j,1)=pik((i-1)*n+j);
         end
     end
 end
 end
 
-function object=objectivevec(m,n,a,c)
+function object=objectivevec(m,n,a,c)       %Réprésente la fonction objective sous forme de vecteur
 
 object=zeros(2*m*n+m*n*n,1);
 
@@ -231,7 +235,7 @@ for i=1:m
 end
 end
 
-function [A,b]=contraintesL( AA, MM, mm_, m, n)
+function [A,b]=contraintesLF( AA, MM, mm_, m, n)
 
 A=zeros(4*m*n+n,2*m*n+m*n*n);
 b=zeros(4*m*n+n,1);
@@ -309,9 +313,9 @@ for i=1:m
         end 
     end
 end 
-end 
+end     %Contraintes X du problème L
 
-function [A,b]=contraintesLproblemsans56( AA, MM, mm_, m, n)
+function [A,b]=contraintesL( AA, MM, mm_, m, n)
 
 A=zeros(4*m*n+n,2*m*n+m*n*n);
 b=zeros(4*m*n+n,1);
@@ -328,7 +332,7 @@ end
 
 iterateur=n; %on a remplit les n lignes avant donc on commence à n
 
-%{
+
 %contrainte 56
 for i=1:m
     for k=1:n 
@@ -340,7 +344,7 @@ for i=1:m
     end
 end 
 iterateur=iterateur+m*n;
-%}
+
 
 %contrainte 57
 for i=1:m
@@ -359,7 +363,7 @@ iterateur=iterateur+m*n;
 for i=1:m
     for j=1:n 
         A(iterateur+(i-1)*n+j,(i-1)+j)=1;
-        A(iterateur+(i-1)*n+j,n*m+(i-1)+j)=-MM(i); %n*m pour passer aux y
+        A(iterateur+(i-1)*n+j,n*m+(i-1)*n+j)=-MM(i); %n*m pour passer aux y
         b(iterateur+(i-1)*n+j)=0;
     end     
 end
@@ -380,10 +384,10 @@ iterateur = iterateur+m*n;
 for i=1:m
     for k=1:n 
         for j=1:n
-            A(iterateur+(i-1)*n+(j-1)*n+k,2*m*n+(i-1)*n*n+(j-1)*n+k)=1;
-            A(iterateur+(i-1)*n+(j-1)*n+k,(i-1)*n+j)=-1;
-            b(iterateur+(i-1)*n+(j-1)*n+k)=0;
+            A(iterateur+(i-1)*n*n+(j-1)*n+k,2*m*n+(i-1)*n*n+(j-1)*n+k)=1;
+            A(iterateur+(i-1)*n*n+(j-1)*n+k,(i-1)*n+j)=-1;
+            b(iterateur+(i-1)*n*n+(j-1)*n+k)=0;
         end 
     end
 end 
-end 
+end     %Contraintes X inter F du problème L
