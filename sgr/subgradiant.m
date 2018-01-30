@@ -1,6 +1,6 @@
 function PartieC()
 
-%On a un jeu de donnée de petite taille
+%On a un jeu de donnÃ©e de petite taille
 
 n=  8;
 m=   4;
@@ -27,7 +27,7 @@ mm_=[
 
 
 % La fonction objective 
-object= @(x) objective(x,m,n,a,c); %a et c donnés par les scripts 
+object= @(x) objective(x,m,n,a,c); %a et c donnÃ©s par les scripts 
 
 % Les contraintes
 [A,b]=contraintesL(AA, MM, mm_, m, n);
@@ -49,7 +49,7 @@ end
 function x=subgradient_method(eps,rho, pi0, iterLimit,DualNoChangTOL,object,ub,lb,a,c, AA, MM, mm_,m,n)
 
 %eps control parameter
-%tau appartient à ]0, 2[ control parameter
+%tau appartient Ã  ]0, 2[ control parameter
 %pi0 initial nonnegative vector (usually the nul vector)
 %iterLimit number of maximum iterations
 %DualNoChangTOL accepted number of iterations without change in the value of the dual function
@@ -65,15 +65,15 @@ pik=pi0;
 J = m*n;
 gamma=zeros(J,1);
 
-% critères d'arrêts
+% critÃ¨res d'arrÃªts
 
 while ( 1 )
 
     % Solve the Lagrangian relaxation: theta(pi) = min L(x,pi) avec x
-    % appartient à F
-    % set x <- argmin{L(x,pik):x appartient à F}
-    f0= vecteurLagr56(m,n,a,c,pik,MM);          %f0 est le vecteur correspondant à la fonction de lagrange en ne prenant en compte que la contrainte 56
-    [A,b]=contraintesLF( AA, MM, mm_, m, n);    %A et b sont les contraites F (positivité de x et z + y entre 0 et 1)
+    % appartient Ã  F
+    % set x <- argmin{L(x,pik):x appartient Ã  F}
+    f0= vecteurLagr56(m,n,a,c,pik,MM);          %f0 est le vecteur correspondant Ã  la fonction de lagrange en ne prenant en compte que la contrainte 56
+    [A,b]=contraintesLF( AA, MM, mm_, m, n);    %A et b sont les contraites F (positivitÃ© de x et z + y entre 0 et 1)
     [x, theta] = linprog(f0, A, b, [], [], lb, ub);
 	for i=m*n+1:2*m*n %Permet de discretiser le vecteur y
         if(x(i)~=0)
@@ -81,7 +81,7 @@ while ( 1 )
         end
     end
     
-   %On récupère dans un vecteur toutes les valeurs des contraintes X
+   %On rÃ©cupÃ¨re dans un vecteur toutes les valeurs des contraintes X
    gamma = vecG(x,m,n,MM);
    
    % if theta(pi^k) > beta^k then set beta^k+1 = theta(pi^k)
@@ -104,7 +104,7 @@ while ( 1 )
    
    if gamma==zeros(J,1)
        fprintf("gamma=0\n");
-       break; % on arrête l'algorithme
+       break; % on arrÃªte l'algorithme
        
    % else thetachapeau= applyMHeuristic (x^k,f,X?F)
    else 
@@ -141,7 +141,7 @@ while ( 1 )
    end
 end
 fid=fopen('dataC.txt','w');
-   fprintf(fid,'matrice X trouvé avec ga \n');
+   fprintf(fid,'matrice X trouvÃ©e \n');
    fprintf(fid,'%d ',x);
    fprintf(fid, '\n multiplicateur de Lagrange : \n');
    fprintf(fid, '%d\n\n', pik);
@@ -201,7 +201,7 @@ for i=1:m
 end 
 end 
 
-function vec= vecteurLagr56(m,n,a,c,pik,MM) %Réprésente le vecteur f de la fonction lagrangienne du problème avec la contrainte 56
+function vec= vecteurLagr56(m,n,a,c,pik,MM) %RÃ©prÃ©sente le vecteur f de la fonction lagrangienne du problÃ¨me avec la contrainte 56
 
 vec=zeros(2*m*n+m*n*n,1);
 
@@ -225,7 +225,7 @@ for i=1:m
 end
 end
 
-function object=objectivevec(m,n,a,c)       %Réprésente la fonction objective sous forme de vecteur
+function object=objectivevec(m,n,a,c)       %RÃ©prÃ©sente la fonction objective sous forme de vecteur
 
 object=zeros(2*m*n+m*n*n,1);
 
@@ -253,12 +253,12 @@ b=zeros(4*m*n+n,1);
 for j=1:n %colonnes
     for i=1:m %lignes     
         A(j,j+((i-1)*n)) = -1; %somme sur la premiere colonne donc on saute le reste
-        %on laisse le reste à 0
+        %on laisse le reste Ã  0
     end
     b(j) = -AA(j); %on multiplie par (-1) car ga est en inf 
 end
 
-iterateur=n; %on a remplit les n lignes avant donc on commence à n
+iterateur=n; %on a remplit les n lignes avant donc on commence Ã  n
 
 %contrainte 56
 for i=1:m
@@ -320,7 +320,7 @@ for i=1:m
         end 
     end
 end 
-end     %Contraintes X du problème L
+end     %Contraintes X du problÃ¨me L
 
 function [A,b]=contraintesL( AA, MM, mm_, m, n)
 
@@ -332,12 +332,12 @@ b=zeros(4*m*n+n,1);
 for j=1:n %colonnes
     for i=1:m %lignes     
         A(j,j+((i-1)*n)) = -1; %somme sur la premiere colonne donc on saute le reste
-        %on laisse le reste à 0
+        %on laisse le reste Ã  0
     end
     b(j) = -AA(j); %on multiplie par (-1) car ga est en inf 
 end
 
-iterateur=n; %on a remplit les n lignes avant donc on commence à n
+iterateur=n; %on a remplit les n lignes avant donc on commence Ã  n
 
 
 %contrainte 56
@@ -397,4 +397,4 @@ for i=1:m
         end 
     end
 end 
-end     %Contraintes X inter F du problème L
+end     %Contraintes X inter F du problÃ¨me L
